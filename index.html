@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ru" class="t-overflow-hidden">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sto form</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@3.6.9/dist/vuetify.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/maska@1.5.0"></script>
+    <script>
+        tailwind.config = {
+            prefix: 't-',
+            theme: {
+            screens: {
+                sm: { min: '600px' },
+                md: { min: '960px' },
+                lg: { min: '1280px' },
+                xl: { min: '1920px' },
+            },
+            },
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vuetify@3.6.9/dist/vuetify.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <v-app class="t-bg-white t-p-2">
+            <div class="t-h-full t-flex t-items-center t-justify-center">
+
+                <!-- Form -->
+                <v-fade-transition leave-absolute>
+                    <v-form v-show="loading === false" ref="form" class="t-w-full t-flex t-flex-col t-bg-[#F3F6FC] t-rounded-lg t-p-6 t-mb-32 t-gap-4" @submit.prevent="submit">
+                        <v-text-field
+                            v-model.trim="data.FullName"
+                            :rules="[rules.required, rules.cyrillic]"
+                            clearable
+                            label="ФИО"
+                        ></v-text-field>
+                        <v-text-field
+                            v-model="data.Phone"
+                            v-maska="'+7 (7##) ### ## ##'"
+                            :rules="[rules.required, rules.phone]"
+                            clearable
+                            label="Номер телефона"
+                        ></v-text-field>
+                        <v-textarea v-model="data['Описание']" clearable label="Краткое описание о проблеме транспорта"></v-textarea>
+                        <v-btn type="submit" text="Отправить"  size="x-large"></v-btn>
+                    </v-form>
+                </v-fade-transition>
+
+                <!-- Loader -->
+                <v-fade-transition leave-absolute>
+                    <v-progress-circular v-if="loading === true" indeterminate :size="70" :width="7"></v-progress-circular>
+                </v-fade-transition>
+
+                <!-- Done  -->
+                <v-fade-transition leave-absolute>
+                    <div v-if="loading === null" class="t-w-full t-flex t-flex-col t-items-center t-justify-center t-mb-32 t-gap-4">
+                    <p class="t-w-full t-flex t-flex-col t-items-center t-gap-3 t-bg-[#F3F6FC] t-rounded-lg t-p-6 t-text-xl t-text-center t-font-medium">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="4em" height="4em" viewBox="0 0 1024 1024">
+                        <path
+                            fill="#53a653"
+                            d="M512 64a448 448 0 1 1 0 896a448 448 0 0 1 0-896m-55.808 536.384l-99.52-99.584a38.4 38.4 0 1 0-54.336 54.336l126.72 126.72a38.27 38.27 0 0 0 54.336 0l262.4-262.464a38.4 38.4 0 1 0-54.272-54.336z"
+                        />
+                        </svg>
+                        Данные сохранены успешно
+                    </p>
+                    <span class="t-underline t-underline-offset-2 t-cursor-pointer t-text-[#A0B3D8]" @click="resetForm">Вернуться к форме</span>
+                    </div>
+                </v-fade-transition>
+            </div>
+        </v-app>
+    </div>
+    <script>
+        /** 
+         * Ссылка на развернутый AppScript таблицы
+        */
+        const url = 'https://script.google.com/macros/s/AKfycbzBFpuu7NbVqR2TLyMYxxcQ2qcUOnp1enF3_aaQwGPkgAq-_wQApTw7Dcx0mSI-YpLW/exec';
+
+        const { createApp, ref } = Vue
+        const { createVuetify } = Vuetify
+        const Mask = Maska
+
+        createApp({
+            setup() {
+
+            /** 
+             * Переменная где хранятся регулярные выражения для проверок
+            */
+            const regex = {
+                cyr: /^[\u0400-\u04FF \- a-z A-Z]+$/,
+                phone: /^\+7 \(\d{3}\) \d{3} \d{2} \d{2}/,
+            };
+
+            /** 
+             * Переменная где хранятся разные правила для полей в форме
+            */
+            const rules = {
+                required: (v) => !!v || 'Заполните поле',
+                phone: (v) => regex.phone.test(v) || 'Заполните поле',
+                cyrillic: (v) => regex.cyr.test(v) || 'Неправильный формат',
+            };
+
+            const form = ref();
+            const loading = ref(false);
+
+            const resetForm = () => {
+                form.value.reset()
+                loading.value = false;
+            };
+
+            const getFormData = (object) =>
+                Object.keys(object).reduce((formData, key) => {
+                    formData.append(key, object[key]);
+                    return formData;
+            }, new FormData());
+
+            /** 
+             * Переменная где хранятся данные с формы
+             * ! Название параметров должно совпадать с названиями колонок в таблице
+            */
+            const data = ref({
+                FullName: '',
+                Phone: '+7 ',
+                'Описание': ''
+            });
+
+            /** 
+             * Функция обработчик при сохранении данных
+             * ! Если нужно добавить какие то данные вне формы, то нужно менять переменную staticData
+            */
+            const submit = async () => {
+                try {
+                    await form.value.validate().then(async (v) => {
+                        if (v.valid) {
+                            loading.value = true;
+
+                            /**
+                             * Статичные данные вне формы
+                             */
+                            const staticData = {
+                                Id: `@${Date.now()}`,
+                                Date: new Date().toLocaleString('ru'),
+                                Status: 'Online',
+                                ClientType: 'Физ. лицо',
+                            };
+                            
+                            await fetch(url, {
+                                method: 'POST',
+                                body: getFormData({ ...data.value, ...staticData }),
+                            });
+                            
+                            loading.value = null;
+                        }
+                    });
+                } catch (err) {
+                    console.log(err);
+                    loading.value = false;
+                }
+            };
+
+            
+
+            return {
+                data,
+                form,
+                rules,
+                loading,
+                
+                submit,
+                resetForm,
+            }
+          }
+        }).
+        use(createVuetify({
+            /**
+             * Стили для UI компонентов Vuetify
+             * Менять только если нужно поменять стили
+             * https://vuetifyjs.com/en/features/global-configuration/
+             */
+            defaults: {
+                global: {
+                    bgColor: 'white',
+                    variant: 'outlined',
+                    color: "#A0B3D8",
+                    baseColor: "#A0B3D8",
+                },
+                VBtn: {
+                    elevation: 0,
+                    style: [{ textTransform: 'none' }, { color: 'white' }, { background: '#A0B3D8' }],
+                },
+            }
+        })).use(Mask).mount('#app')
+      </script>
+</body>
+</html>
