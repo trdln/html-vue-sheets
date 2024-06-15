@@ -12,17 +12,21 @@
         tailwind.config = {
             prefix: 't-',
             theme: {
-            screens: {
-                sm: { min: '600px' },
-                md: { min: '960px' },
-                lg: { min: '1280px' },
-                xl: { min: '1920px' },
-            },
+                screens: {
+                    sm: { min: '600px' },
+                    md: { min: '960px' },
+                    lg: { min: '1280px' },
+                    xl: { min: '1920px' },
+                },
             },
         }
     </script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vuetify@3.6.9/dist/vuetify.min.css">
     <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&amp;display=swap">
+    <style>* { font-family: 'Roboto' !important; }</style>
 </head>
 <body>
     <div id="app">
@@ -191,6 +195,9 @@
                     elevation: 0,
                     style: [{ textTransform: 'none' }, { color: 'white' }, { background: '#A0B3D8' }],
                 },
+                VMessages: {
+                    color: 'default'
+                }
             }
         })).use(Mask).mount('#app')
       </script>
